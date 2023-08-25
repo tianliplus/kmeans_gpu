@@ -13,6 +13,7 @@ void get_opts(int argc,
         std::cout << "\t--max_num_iter or -m <max_num_iter>" << std::endl;
         std::cout << "\t--threshold or -t <threshold>" << std::endl;
         std::cout << "\t--seed or -s <seed>" << std::endl;
+        std::cout << "\t--implement_type or -x <implement_type> (cpu / cuda / thrust)" << std::endl;
         std::cout << "\t[Optional] --centroids or -c" << std::endl;
         exit(0);
     }
@@ -26,11 +27,12 @@ void get_opts(int argc,
         {"max_num_iter", required_argument, NULL, 'm'},
         {"threshold", required_argument, NULL, 't'},
         {"seed", required_argument, NULL, 's'},
+        {"implement_type", required_argument, NULL, 'x'},
         {"centroids", no_argument, NULL, 'c'}
     };
 
     int ind, c;
-    while ((c = getopt_long(argc, argv, "k:d:i:m:t:cs:", l_opts, &ind)) != -1)
+    while ((c = getopt_long(argc, argv, "k:d:i:m:t:x:cs:", l_opts, &ind)) != -1)
     {
         switch (c)
         {
@@ -56,6 +58,9 @@ void get_opts(int argc,
             break;
         case 's':
             opts->seed = atoi((char *)optarg);
+            break;
+        case 'x':
+            opts->implement_type = (char *)optarg;
             break;
         case ':':
             std::cerr << argv[0] << ": option -" << (char)optopt << "requires an argument." << std::endl;

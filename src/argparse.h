@@ -12,6 +12,7 @@ struct options_t {
 	double threshold;
 	bool centroids;
 	int seed;
+	char *implement_type;
 };
 
 void get_opts(int argc, char **argv, struct options_t *opts);
