@@ -1,7 +1,7 @@
 CC = nvcc 
 SRCS = ./src/*.cpp
 INC = ./src/
-OPTS = -std=c++17 -Wall -Werror -lpthread -O3
+OPTS = -O2
 
 EXEC = bin/kmeans
 
