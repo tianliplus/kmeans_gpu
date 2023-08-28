@@ -15,10 +15,12 @@ void get_opts(int argc,
         std::cout << "\t--seed or -s <seed>" << std::endl;
         std::cout << "\t--implement_type or -x <implement_type> (cpu / cuda / thrust)" << std::endl;
         std::cout << "\t[Optional] --centroids or -c" << std::endl;
+        std::cout << "\t[Optional] --unchanged_converge or -u" << std::endl;
         exit(0);
     }
 
     opts->centroids = false;
+    opts->unchanged_converge = false;
 
     struct option l_opts[] = {
         {"num_cluster", required_argument, NULL, 'k'},
@@ -28,7 +30,8 @@ void get_opts(int argc,
         {"threshold", required_argument, NULL, 't'},
         {"seed", required_argument, NULL, 's'},
         {"implement_type", required_argument, NULL, 'x'},
-        {"centroids", no_argument, NULL, 'c'}
+        {"centroids", no_argument, NULL, 'c'},
+        {"unchanged_converge", no_argument, NULL, 'u'}
     };
 
     int ind, c;
@@ -61,6 +64,9 @@ void get_opts(int argc,
             break;
         case 'x':
             opts->implement_type = (char *)optarg;
+            break;
+        case 'u':
+            opts->unchanged_converge = true;
             break;
         case ':':
             std::cerr << argv[0] << ": option -" << (char)optopt << "requires an argument." << std::endl;

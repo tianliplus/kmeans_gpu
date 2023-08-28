@@ -13,6 +13,7 @@ struct options_t {
 	bool centroids;
 	int seed;
 	char *implement_type;
+	bool unchanged_converge;
 };
 
 void get_opts(int argc, char **argv, struct options_t *opts);
