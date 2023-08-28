@@ -7,6 +7,7 @@
 #include <math.h>
 #include <chrono>
 #include <iomanip>
+#include <cstring>
 
 static unsigned long int next = 1;
 static unsigned long kmeans_rmax = 32767;
