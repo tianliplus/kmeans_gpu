@@ -6,6 +6,7 @@
 #include <string>
 #include <math.h>
 #include <chrono>
+#include <iomanip>
 
 static unsigned long int next = 1;
 static unsigned long kmeans_rmax = 32767;
@@ -135,15 +136,15 @@ int kmeans_cpu(double **points, double **centers, int *labels, int k, int dims, 
 			done = true;
 		} else {
 			done = true;
+			double total_delta = 0.0;
 			for (int i = 0; i < k; i++) {
-				double distance_delta = sqrt(calc_distance(centers[i], new_centers[i], dims));
-				if (distance_delta > threshold) {
+				total_delta += sqrt(calc_distance(centers[i], new_centers[i], dims));
+				if (total_delta > threshold) {
 					done = false;
 					break;
-				} else {
-					std::cout << "iter: " << iter << ", center: " << i << ", distance_delta: " << distance_delta << std::endl;
 				}
 			}
+			std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << total_delta << std::endl;
 		}
 
 		for (int i = 0; i < k; i++) {

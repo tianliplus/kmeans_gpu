@@ -35,7 +35,7 @@ void get_opts(int argc,
     };
 
     int ind, c;
-    while ((c = getopt_long(argc, argv, "k:d:i:m:t:x:cs:", l_opts, &ind)) != -1)
+    while ((c = getopt_long(argc, argv, "k:d:i:m:t:x:cus:", l_opts, &ind)) != -1)
     {
         switch (c)
         {
