@@ -1,15 +1,16 @@
 #include "kmeans.h"
 
+#include <stdio.h>
+
 __global__ void converge_check(double *centers, double *new_centers_sum, int *cluster_points_cnt, int num_clusters, int dims) {
     extern __shared__ double tmp_delta[];
-    int point_idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (point_idx >= total_points) {
+    int point_idx = threadIdx.x;
+    if (point_idx >= num_clusters) {
         return;
     }
 
-    int cluster_idx = labels[point_idx];
     // TODO shmem?
-    int cluster_points_count = cluster_points_cnt[cluster_idx];
+    int cluster_points_count = cluster_points_cnt[point_idx];
 
     double delta = 0;
     for (int p = point_idx * dims; p < point_idx * (dims + 1); p++) {
@@ -38,7 +39,7 @@ __global__ void recluster(double *points, double *centers, int *labels, double *
     extern __shared__ char shared_memory[];
 
     double *local_centers = (double *)shared_memory;
-    int *cluster_points_count = (double *)(shared_memory + dims * num_clusters * sizeof(double));
+    int *cluster_points_count = (int *)(shared_memory + dims * num_clusters * sizeof(double));
     double *new_centers_sum = (double *)(shared_memory + dims * num_clusters * sizeof(double) + num_clusters * sizeof(int));
 
     int point_idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -94,7 +95,7 @@ __host__ __device__ double calc_distance(double *p1, double *p2, int dims) {
     return distance;
 }
 
-int kmeans_cuda(double *points, double *centers, int *labels, int dims, int total_points, int num_clusters, int max_num_iter, double threshold) {
+int kmeans_cuda(double *points, double *centers, int *labels, int dims, int total_points, int num_cluster, int max_num_iter, double threshold) {
     int labels_bytes = sizeof(int) * total_points;
     int points_bytes = sizeof(double) * total_points * dims;
     int centers_bytes = sizeof(double) * num_cluster * dims;
@@ -109,8 +110,8 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
     cudaMalloc((void **)&d_labels, labels_bytes);
     cudaMalloc((void **)&d_cluster_points_count, cluster_points_count_bytes);
 
-    cumaMemcpy(d_points, points, points_bytes, cudaMemcpyHostToDevice);
-    cumaMemcpy(d_centers, centers, centers_bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_points, points, points_bytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_centers, centers, centers_bytes, cudaMemcpyHostToDevice);
 
     int block_dim = 64;
     int grid_dim = (total_points + block_dim - 1) / block_dim;
@@ -120,7 +121,7 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
     bool done = false;
     while (!done) {
         iter++;
-        cudaMemset(d_tmp_centers, 0, center_bytes);
+        cudaMemset(d_tmp_centers, 0, centers_bytes);
         cudaMemset(d_cluster_points_count, 0, cluster_points_count_bytes);
 
         recluster<<<grid_dim, block_dim, shared_mem_bytes>>>(d_points, d_centers, d_labels, d_tmp_centers, d_cluster_points_count, num_clusters, dims, total_points);
@@ -129,9 +130,9 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
             done = true;
         } else {
             double delta;
-            cudaMemcpy(delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
+            cudaMemcpy(&delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
             if (delta < threshold) {
-                done = ture;
+                done = true;
             }
             std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << delta << std::endl;
         }
