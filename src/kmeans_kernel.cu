@@ -1,59 +1,5 @@
 #include "kmeans.h"
 
-int kmeans_cuda(double *points, double *centers, int *labels, int dims, int total_points, int num_clusters, int max_num_iter, double threshold) {
-    int labels_bytes = sizeof(int) * total_points;
-    int points_bytes = sizeof(double) * total_points * dims;
-    int centers_bytes = sizeof(double) * num_cluster * dims;
-    int cluster_points_count_bytes = sizeof(int) * dims;
-
-    double *d_points, *d_centers, *d_tmp_centers;
-    int *d_labels, *d_cluster_points_count;
-
-    cudaMalloc((void **)&d_points, points_bytes);
-    cudaMalloc((void **)&d_centers, centers_bytes);
-    cudaMalloc((void **)&d_tmp_centers, centers_bytes);
-    cudaMalloc((void **)&d_labels, labels_bytes);
-    cudaMalloc((void **)&d_cluster_points_count, cluster_points_count_bytes);
-
-    cumaMemcpy(d_points, points, points_bytes, cudaMemcpyHostToDevice);
-    cumaMemcpy(d_centers, centers, centers_bytes, cudaMemcpyHostToDevice);
-
-    int block_dim = 64;
-    int grid_dim = (total_points + block_dim - 1) / block_dim;
-    int shared_mem_bytes = num_cluster * dims * 2 * sizeof(double) + num_cluster * sizeof(int);
-
-    int iter = 0;
-    bool done = false;
-    while (!done) {
-        iter++;
-        cudaMemset(d_tmp_centers, 0, center_bytes);
-        cudaMemset(d_cluster_points_count, 0, cluster_points_count_bytes);
-
-        recluster<<<grid_dim, block_dim, shared_mem_bytes>>>(d_points, d_centers, d_labels, d_tmp_centers, d_cluster_points_count, num_clusters, dims, total_points);
-        converge_check<<<1, num_clusters, num_clusters>>>(d_centers, d_tmp_centers, d_cluster_points_count, num_clusters, dims);
-        if (iter > max_num_iter) {
-            done = true;
-        } else {
-            double delta;
-            cudaMemcpy(delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
-            if (delta < threshold) {
-                done = ture;
-            }
-            std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << delta << std::endl;
-        }
-    }
-
-    cudaMemcpy(labels, d_labels, labels_bytes, cudaMemcpyDeviceToHost);
-    cudaMemcpy(centers, d_centers, centers_bytes, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_points);
-    cudaFree(d_centers);
-    cudaFree(d_tmp_centers);
-    cudaFree(d_labels);
-    cudaFree(d_cluster_points_count);
-    return iter;
-}
-
 __global__ void converge_check(double *centers, double *new_centers_sum, int *cluster_points_cnt, int num_clusters, int dims) {
     extern __shared__ double tmp_delta[];
     int point_idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -146,4 +92,58 @@ __host__ __device__ double calc_distance(double *p1, double *p2, int dims) {
         distance += (p1[i] - p2[i]) * (p1[i] - p2[i]);
     }
     return distance;
+}
+
+int kmeans_cuda(double *points, double *centers, int *labels, int dims, int total_points, int num_clusters, int max_num_iter, double threshold) {
+    int labels_bytes = sizeof(int) * total_points;
+    int points_bytes = sizeof(double) * total_points * dims;
+    int centers_bytes = sizeof(double) * num_cluster * dims;
+    int cluster_points_count_bytes = sizeof(int) * dims;
+
+    double *d_points, *d_centers, *d_tmp_centers;
+    int *d_labels, *d_cluster_points_count;
+
+    cudaMalloc((void **)&d_points, points_bytes);
+    cudaMalloc((void **)&d_centers, centers_bytes);
+    cudaMalloc((void **)&d_tmp_centers, centers_bytes);
+    cudaMalloc((void **)&d_labels, labels_bytes);
+    cudaMalloc((void **)&d_cluster_points_count, cluster_points_count_bytes);
+
+    cumaMemcpy(d_points, points, points_bytes, cudaMemcpyHostToDevice);
+    cumaMemcpy(d_centers, centers, centers_bytes, cudaMemcpyHostToDevice);
+
+    int block_dim = 64;
+    int grid_dim = (total_points + block_dim - 1) / block_dim;
+    int shared_mem_bytes = num_cluster * dims * 2 * sizeof(double) + num_cluster * sizeof(int);
+
+    int iter = 0;
+    bool done = false;
+    while (!done) {
+        iter++;
+        cudaMemset(d_tmp_centers, 0, center_bytes);
+        cudaMemset(d_cluster_points_count, 0, cluster_points_count_bytes);
+
+        recluster<<<grid_dim, block_dim, shared_mem_bytes>>>(d_points, d_centers, d_labels, d_tmp_centers, d_cluster_points_count, num_clusters, dims, total_points);
+        converge_check<<<1, num_clusters, num_clusters>>>(d_centers, d_tmp_centers, d_cluster_points_count, num_clusters, dims);
+        if (iter > max_num_iter) {
+            done = true;
+        } else {
+            double delta;
+            cudaMemcpy(delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
+            if (delta < threshold) {
+                done = ture;
+            }
+            std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << delta << std::endl;
+        }
+    }
+
+    cudaMemcpy(labels, d_labels, labels_bytes, cudaMemcpyDeviceToHost);
+    cudaMemcpy(centers, d_centers, centers_bytes, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_points);
+    cudaFree(d_centers);
+    cudaFree(d_tmp_centers);
+    cudaFree(d_labels);
+    cudaFree(d_cluster_points_count);
+    return iter;
 }

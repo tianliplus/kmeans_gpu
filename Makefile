@@ -1,5 +1,5 @@
 CC = nvcc 
-SRCS = ./src/*.cpp
+SRCS = ./src/*.cpp ./src/*.cu
 INC = ./src/
 OPTS =  -std=c++11 -O2
 
