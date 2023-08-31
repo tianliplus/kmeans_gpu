@@ -151,12 +151,3 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 	}
 	return iter;
 }
-
-double calc_distance(double *p1, double *p2, int dims) {
-    double distance = 0;
-    for (int i = 0; i < dims; i++) {
-        distance += (p1[i] - p2[i]) * (p1[i] - p2[i]);
-    }
-    return distance;
-}
-
