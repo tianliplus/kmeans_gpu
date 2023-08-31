@@ -122,6 +122,9 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 				new_centers[i * dims + j] /= cluster_points_count[i];
 			}
 		}
+		for (int d = 0; d < dims; d++) {
+			std::cout << new_centers[d] << " " << std::endl;
+		}
 
 		if (iter > max_num_iter || (unchanged_converge && cluster_unchanged)) {
 			std::cout << "iter: " << iter << ", unchanged: " << (cluster_unchanged ? "true" : "false") << std::endl;
