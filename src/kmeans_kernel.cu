@@ -97,7 +97,7 @@ __host__ __device__ double calc_distance(double *p1, double *p2, int dims) {
     return distance;
 }
 
-int kmeans_cuda(double *points, double *centers, int *labels, int dims, int total_points, int num_cluster, int max_num_iter, double threshold) {
+int kmeans_cuda(double *points, double *& centers, int *labels, int dims, int total_points, int num_cluster, int max_num_iter, double threshold) {
     int labels_bytes = sizeof(int) * total_points;
     int points_bytes = sizeof(double) * total_points * dims;
     int centers_bytes = sizeof(double) * num_cluster * dims;
