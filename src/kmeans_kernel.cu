@@ -5,32 +5,32 @@
 
 __global__ void converge_check(double *centers, double *new_centers_sum, int *cluster_points_cnt, int num_clusters, int dims) {
     extern __shared__ double tmp_delta[];
-    int point_idx = threadIdx.x;
-    if (point_idx >= num_clusters) {
+    int cluster_idx = threadIdx.x;
+    if (cluster_idx >= num_clusters) {
         return;
     }
 
     // TODO shmem?
-    int cluster_points_count = cluster_points_cnt[point_idx];
+    int cluster_points_count = cluster_points_cnt[cluster_idx];
 
     double delta = 0;
-    for (int p = point_idx * dims; p < point_idx * (dims + 1); p++) {
-        double new_center = new_centers_sum[p] / cluster_points_count;
-        delta += (new_center - centers[p]) * (new_center - centers[p]);
-        centers[p] = new_center;
+    for (int d = 0; d < dims; d++) {
+        int offset = cluster_idx * dims + d;
+        double new_center = new_centers_sum[offset] / cluster_points_count;
+        delta += (new_center - centers[offset]) * (new_center - centers[offset]);
     }
-    tmp_delta[threadIdx.x] = sqrt(delta);
+    tmp_delta[cluster_idx] = sqrt(delta);
 
     __syncthreads();
 
     for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
-        if (threadIdx.x < s) {
-            tmp_delta[threadIdx.x] += tmp_delta[threadIdx.x + s];
+        if (cluster_idx < s) {
+            tmp_delta[cluster_idx] += tmp_delta[cluster_idx + s];
         }
         __syncthreads();
     }
 
-    if (threadIdx.x == 0) {
+    if (cluster_idx == 0) {
         // reuse new_centers_sum[0] to store sum delta
         new_centers_sum[0] = tmp_delta[0];
     }
@@ -122,6 +122,10 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
     bool done = false;
     while (!done) {
         iter++;
+        if (iter > max_num_iter) {
+            std::cout << "reach max iter: " << iter << std::endl;
+            break;
+        }
         cudaMemset(d_tmp_centers, 0, centers_bytes);
         cudaMemset(d_cluster_points_count, 0, cluster_points_count_bytes);
 
@@ -139,18 +143,12 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
         converge_check<<<1, num_cluster, num_cluster>>>(d_centers, d_tmp_centers, d_cluster_points_count, num_cluster, dims);
         cudaDeviceSynchronize();
 
-
-
-        if (iter > max_num_iter) {
+        double delta;
+        cudaMemcpy(&delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
+        if (delta < threshold) {
             done = true;
-        } else {
-            double delta;
-            cudaMemcpy(&delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
-            if (delta < threshold) {
-                done = true;
-            }
-            std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << delta << std::endl;
         }
+        std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << delta << std::endl;
     }
 
     cudaMemcpy(labels, d_labels, labels_bytes, cudaMemcpyDeviceToHost);

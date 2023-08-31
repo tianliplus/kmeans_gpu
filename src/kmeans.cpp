@@ -91,6 +91,11 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 	while (!done) {
 		bool cluster_unchanged = true;
 		iter++;
+		if (iter > max_num_iter) {
+			std::cout << "reach max iter: " << iter << std::endl;
+			break;
+		}
+
 		double *new_centers = (double*)malloc(sizeof(double) * dims * k);
 		memset(new_centers, 0, sizeof(double) * dims * k);
 
@@ -126,7 +131,7 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 			std::cout << new_centers[d] << " " << std::endl;
 		}
 
-		if (iter > max_num_iter || (unchanged_converge && cluster_unchanged)) {
+		if (unchanged_converge && cluster_unchanged) {
 			std::cout << "iter: " << iter << ", unchanged: " << (cluster_unchanged ? "true" : "false") << std::endl;
 			done = true;
 		} else {
