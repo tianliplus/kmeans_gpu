@@ -18,6 +18,7 @@ __global__ void converge_check(double *centers, double *new_centers_sum, int *cl
         int offset = cluster_idx * dims + d;
         double new_center = new_centers_sum[offset] / cluster_points_count;
         delta += (new_center - centers[offset]) * (new_center - centers[offset]);
+        centers[offset] = new_center;
     }
     tmp_delta[cluster_idx] = sqrt(delta);
 
