@@ -138,7 +138,6 @@ int kmeans_cuda(double *points, double *& centers, int *labels, int dims, int to
         if (delta < threshold) {
             done = true;
         }
-        std::cout << "iter: " << iter << ", distance_delta: " << std::setprecision(15) << std::fixed << delta << std::endl;
     }
 
     cudaMemcpy(labels, d_labels, labels_bytes, cudaMemcpyDeviceToHost);
