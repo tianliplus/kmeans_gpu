@@ -95,7 +95,6 @@ int kmeans_cpu(double *points, double *& centers, int *labels, int k, int dims, 
 			std::cout << "reach max iter: " << iter << std::endl;
 			break;
 		}
-		std::cout << "begin iter: " << iter << std::endl;
 
 		double *new_centers = (double*)malloc(sizeof(double) * dims * k);
 		memset(new_centers, 0, sizeof(double) * dims * k);
