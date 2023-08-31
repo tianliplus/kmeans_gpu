@@ -127,6 +127,7 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 				new_centers[i * dims + j] /= cluster_points_count[i];
 			}
 		}
+		
 
 		if (unchanged_converge && cluster_unchanged) {
 			std::cout << "iter: " << iter << ", unchanged: " << (cluster_unchanged ? "true" : "false") << std::endl;
@@ -145,8 +146,17 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 		free(centers);
 		centers = new_centers;
 	}
-
+	for (int d = 0; d < dims; d++) {
+		std::cout << centers[d] << " " << std::endl;
+	}
 	return iter;
 }
 
+double calc_distance(double *p1, double *p2, int dims) {
+    double distance = 0;
+    for (int i = 0; i < dims; i++) {
+        distance += (p1[i] - p2[i]) * (p1[i] - p2[i]);
+    }
+    return distance;
+}
 
