@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	if (strcmp(opts.implement_type, "cpu") == 0) {
 		iter_to_converge = kmeans_cpu(points, centers, labels, opts.num_cluster, opts.dims, total_points, opts.max_num_iter, opts.threshold, opts.unchanged_converge);
-	} else if (strcmp(opts.implement_type, "cuda")) {
+	} else if (strcmp(opts.implement_type, "cuda") == 0) {
 		iter_to_converge = kmeans_cuda(points, centers, labels, opts.dims, total_points, opts.num_cluster, opts.max_num_iter, opts.threshold);
 	} else {
 		std::cout << "Unsupported implement_type: " << opts.implement_type << std::endl;

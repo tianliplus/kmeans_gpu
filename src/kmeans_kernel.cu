@@ -1,6 +1,7 @@
 #include "kmeans.h"
 
-#include <stdio.h>
+#include <iostream>
+#include <iomanip>
 
 __global__ void converge_check(double *centers, double *new_centers_sum, int *cluster_points_cnt, int num_clusters, int dims) {
     extern __shared__ double tmp_delta[];
@@ -124,8 +125,10 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
         cudaMemset(d_tmp_centers, 0, centers_bytes);
         cudaMemset(d_cluster_points_count, 0, cluster_points_count_bytes);
 
-        recluster<<<grid_dim, block_dim, shared_mem_bytes>>>(d_points, d_centers, d_labels, d_tmp_centers, d_cluster_points_count, num_clusters, dims, total_points);
-        converge_check<<<1, num_clusters, num_clusters>>>(d_centers, d_tmp_centers, d_cluster_points_count, num_clusters, dims);
+        recluster<<<grid_dim, block_dim, shared_mem_bytes>>>(d_points, d_centers, d_labels, d_tmp_centers, d_cluster_points_count, num_cluster, dims, total_points);
+        cudaDeviceSynchronize();
+        converge_check<<<1, num_cluster, num_cluster>>>(d_centers, d_tmp_centers, d_cluster_points_count, num_cluster, dims);
+        cudaDeviceSynchronize();
         if (iter > max_num_iter) {
             done = true;
         } else {
