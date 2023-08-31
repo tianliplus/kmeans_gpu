@@ -1,7 +1,7 @@
 CC = nvcc 
 SRCS = ./src/*.cpp ./src/*.cu
 INC = ./src/
-OPTS =  -std=c++11 -O2
+OPTS =  -std=c++11 -arch=sm_60 -O2
 
 EXEC = bin/kmeans
 
