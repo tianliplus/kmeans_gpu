@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	if (strcmp(opts.implement_type, "cpu") == 0) {
 		iter_to_converge = kmeans_cpu(points, centers, labels, opts.num_cluster, opts.dims, total_points, opts.max_num_iter, opts.threshold, opts.unchanged_converge);
-		for (int d = 0; d < dims; d++) {
+		for (int d = 0; d < opts.dims; d++) {
 			std::cout << centers[d] << " " << std::endl;
 		}
 	} else if (strcmp(opts.implement_type, "cuda") == 0) {
@@ -127,7 +127,7 @@ int kmeans_cpu(double *points, double *centers, int *labels, int k, int dims, in
 		}
 
 		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < opts.dims; j++) {
+			for (int j = 0; j < dims; j++) {
 				new_centers[i * dims + j] /= cluster_points_count[i];
 			}
 		}
