@@ -132,18 +132,7 @@ int kmeans_cuda(double *points, double *centers, int *labels, int dims, int tota
 
         recluster<<<grid_dim, block_dim, shared_mem_bytes>>>(d_points, d_centers, d_labels, d_tmp_centers, d_cluster_points_count, num_cluster, dims, total_points);
         cudaDeviceSynchronize();
-
-        double *tmp_sum = (double *)malloc(dims * sizeof(double));
-        int *tmp_count = (int *)malloc(cluster_points_count_bytes);
-        cudaMemcpy(tmp_count, d_cluster_points_count, cluster_points_count_bytes, cudaMemcpyDeviceToHost);
-        cudaMemcpy(tmp_sum, d_tmp_centers, dims * sizeof(double), cudaMemcpyDeviceToHost);
-        for (int i = 0; i < dims; i++) { std::cout << tmp_sum[i] / tmp_count[0] << " " << std::endl; }
-        free(tmp_sum);
-        free(tmp_count);
-
         converge_check<<<1, num_cluster, num_cluster>>>(d_centers, d_tmp_centers, d_cluster_points_count, num_cluster, dims);
-        cudaDeviceSynchronize();
-
         double delta;
         cudaMemcpy(&delta, d_tmp_centers, sizeof(double), cudaMemcpyDeviceToHost);
         if (delta < threshold) {
