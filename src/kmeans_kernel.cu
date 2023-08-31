@@ -81,9 +81,9 @@ __global__ void recluster(double *points, double *centers, int *labels, double *
         int k = threadIdx.x;
         if (cluster_points_count[k] > 0) {
             atomicAdd(&global_cluster_points_cnt[k], cluster_points_count[k]);
-        }
-        for (int d = 0; d < dims; d++) {
-            atomicAdd(&global_new_centers_sum[k * dims + d], new_centers_sum[label * dims + d]);
+            for (int d = 0; d < dims; d++) {
+                atomicAdd(&global_new_centers_sum[k * dims + d], new_centers_sum[k * dims + d]);
+            }
         }
     }
 }
